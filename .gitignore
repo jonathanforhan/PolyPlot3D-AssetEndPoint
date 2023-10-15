@@ -1,9 +1,9 @@
 log*/*
+!log/.gitkeep
 .env
 
 # binary
 PolyPlot3D-AssetEndPoint
 
 # certs
-server.crt
-server.key
+certs/

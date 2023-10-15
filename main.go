@@ -107,13 +107,11 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if len(port) == 0 {
-		port = "8080"
+		port = "80"
 	}
 
 	fmt.Printf("Server Listening on Port " + port + "\n")
-
-	// err = http.ListenAndServeTLS(":"+port, "server.crt", "server.key", mux)
-	err = http.ListenAndServe(":"+port, mux)
+	err = http.ListenAndServeTLS(":"+port, "certs/fullchain.pem", "certs/privkey.pem", mux)
 
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Println("SERVER-CLOSED ")
