@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-    "slices"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,7 +14,7 @@ import (
 )
 
 var whitelist = []string{
-    "https://poly-plot-3d.netlify.app",
+	"https://poly-plot-3d.netlify.app",
 }
 
 /* Get the request's IP */
@@ -112,6 +112,7 @@ func main() {
 
 	fmt.Printf("Server Listening on Port " + port + "\n")
 
+	// err = http.ListenAndServeTLS(":"+port, "server.crt", "server.key", mux)
 	err = http.ListenAndServe(":"+port, mux)
 
 	if errors.Is(err, http.ErrServerClosed) {

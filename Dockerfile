@@ -7,9 +7,10 @@ WORKDIR /app
 COPY go.mod ./
 RUN go mod download
 
-COPY *.go ./
-COPY assets/. ./
+COPY . ./
 RUN mkdir -p ./log
+
+ENV PORT=80
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o ./endpoint
 

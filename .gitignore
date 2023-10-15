@@ -3,3 +3,7 @@ log*/*
 
 # binary
 PolyPlot3D-AssetEndPoint
+
+# certs
+server.crt
+server.key
