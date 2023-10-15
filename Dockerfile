@@ -9,11 +9,11 @@ RUN go mod download
 
 COPY *.go ./
 COPY assets/. ./
-RUN mkdir -p log
+RUN mkdir -p ./log
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /endpoint
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./endpoint
 
-EXPOSE 8000
+EXPOSE 80
 
-CMD ["/endpoint"]
+CMD ["/app/endpoint"]
 

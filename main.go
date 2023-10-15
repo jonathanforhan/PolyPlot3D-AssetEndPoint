@@ -3,15 +3,22 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
+    "slices"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
-func readIp(r *http.Request) (string, error) {
+var whitelist = []string{
+    "https://poly-plot-3d.netlify.app",
+}
+
+/* Get the request's IP */
+func readIp(r *http.Request) string {
 	ipaddr := r.Header.Get("X-Real-Ip")
 	if ipaddr == "" {
 		ipaddr = r.Header.Get("X-Forwarded-For")
@@ -19,38 +26,34 @@ func readIp(r *http.Request) (string, error) {
 	if ipaddr == "" {
 		ipaddr = r.RemoteAddr
 	}
-    if ipaddr == "" {
-        return ipaddr, errors.New("could not parse ip")
-    }
+	if ipaddr == "" {
+		ipaddr = "UNKNOWN"
+	}
 
-    return ipaddr, nil
+	return ipaddr
 }
 
+/* if api_key matches .env api key we allow request */
 func cors(w *http.ResponseWriter, r *http.Request) {
-    ipaddr, err := readIp(r)
-    if err != nil {
-        return
-    }
-    if strings.HasPrefix(ipaddr, "localhost:") || strings.HasPrefix(ipaddr, "[::1]:"){
-		(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	} else if strings.HasPrefix(ipaddr, "poly-plot-3d") {
-		(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	origin := (*r).Header.Get("Origin")
+	if strings.HasPrefix(origin, "http://localhost:") {
+		(*w).Header().Set("Access-Control-Allow-Origin", origin)
+	} else if slices.Contains(whitelist, origin) {
+		(*w).Header().Set("Access-Control-Allow-Origin", origin)
 	}
 }
 
+/* GET "/" */
 func getRoot(w http.ResponseWriter, r *http.Request) {
 	cors(&w, r)
-    ipaddr, err := readIp(r);
-    if err != nil { ipaddr = "UNKNOWN" }
 
-	log.Printf("GET %s %s", r.URL.String(), ipaddr)
-	io.WriteString(w, "PolyPlot3D Asset Import Endpoint")
+	log.Printf("GET %s %s", r.URL.String(), readIp(r))
+	w.Write([]byte("PolyPlot3D Asset Import Endpoint"))
 }
 
+/* GET "/import" */
 func getImport(w http.ResponseWriter, r *http.Request) {
 	cors(&w, r)
-    ipaddr, err := readIp(r);
-    if err != nil { ipaddr = "UNKNOWN" }
 
 	asset := r.URL.Query().Get("asset")
 	ft := r.URL.Query().Get("ft")
@@ -74,7 +77,7 @@ func getImport(w http.ResponseWriter, r *http.Request) {
 			w.Write(data)
 		}
 	}
-	log.Printf("%s %s %s", status, r.URL.String(), ipaddr)
+	log.Printf("%s %s %s", status, r.URL.String(), readIp(r))
 }
 
 func main() {
@@ -84,6 +87,11 @@ func main() {
 			main()
 		}
 	}()
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	logfile, err := os.Create(fmt.Sprintf("log/server-log-%s.log", time.Now().UTC().Format(time.DateTime)))
 	if err != nil {
@@ -97,7 +105,14 @@ func main() {
 	mux.HandleFunc("/", getRoot)
 	mux.HandleFunc("/import", getImport)
 
-	err = http.ListenAndServe(":8000", mux)
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "8080"
+	}
+
+	fmt.Printf("Server Listening on Port " + port + "\n")
+
+	err = http.ListenAndServe(":"+port, mux)
 
 	if errors.Is(err, http.ErrServerClosed) {
 		log.Println("SERVER-CLOSED ")
