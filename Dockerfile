@@ -8,7 +8,8 @@ COPY go.mod ./
 RUN go mod download
 
 # throw err if no certs dir
-COPY certs/ ./
+COPY ./certs ./
+COPY ./.env ./
 COPY . ./
 RUN mkdir -p ./log
 
